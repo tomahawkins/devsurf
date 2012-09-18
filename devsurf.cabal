@@ -1,0 +1,24 @@
+name:          devsurf
+version:       0.0.0
+category:      Language
+synopsis:      A developable surface design language.
+description:   DevSurf is a modeling langauge for constructing developable surfaces.
+author:        Tom Hawkins <tomahawkins@gmail.com>
+maintainer:    Tom Hawkins <tomahawkins@gmail.com>
+license:       BSD3
+license-file:  LICENSE
+homepage:      http://tomahawkins.org
+build-type:    Simple
+cabal-version: >= 1.8
+
+library
+  build-depends:   base
+  exposed-modules: Language.DevSurf
+                   Language.DevSurf.STL
+                   Language.DevSurf.Types
+  ghc-options:     -W
+
+source-repository head
+  type:     git
+  location: git://github.com/tomahawkins/devsurf.git
+
