@@ -10,6 +10,7 @@ module Language.DevSurf.Types
   , normalize
   , magnitude
   , meshPanel
+  , flattenPanel
   ) where
 
 import Data.List
@@ -46,4 +47,8 @@ meshPanel :: Panel -> Mesh
 meshPanel a = case a of
   _ : _ : _ : _ -> [ if flip then (b, a, c) else (a, b, c) | (flip, a, b, c) <- zip4 (concat $ repeat [False, True]) a (tail a) (tail $ tail a) ]
   _             -> error "meshPanel: Not enough points to form a triangle."
+
+-- | Flatten (unroll) a 'Panel' to the XY plane.
+flattenPanel :: Panel -> Panel
+flattenPanel = undefined
 
