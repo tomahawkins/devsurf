@@ -84,37 +84,39 @@ scale :: Transform a => Vector -> a -> a
 scale (a, b, c) = transform $ \(x, y, z) -> (a * x, b * y, c * z)
 
 rotateX :: Transform a => Double -> a -> a
-rotateX angle = transform rotateX
+rotateX angle = transform f
   where
-  rotateX (x, y, z) = (x, m * cos angle', m * sin angle')
+  f (x, y, z) = (x, m * cos angle', m * sin angle')
     where
     angle' = angle + atan2 z y
     m = sqrt $ y ** 2 + z ** 2
 
 rotateY :: Transform a => Double -> a -> a
-rotateY angle = transform rotateY
+rotateY angle = transform f
   where
-  rotateY (x, y, z) = ((-m) * cos angle', y, m * sin angle')
+  f (x, y, z) = ((-m) * cos angle', y, m * sin angle')
     where
     angle' = angle + atan2 z (-x)
     m = sqrt $ x ** 2 + z ** 2
 
 rotateZ :: Transform a => Double -> a -> a
-rotateZ angle = transform rotateZ
+rotateZ angle = transform f
   where
-  rotateZ (x, y, z) = (m * cos angle', m * sin angle', z)
+  f (x, y, z) = (m * cos angle', m * sin angle', z)
     where
     angle' = angle + atan2 y x
-    m = sqrt $ x ** 2 + z ** 2
+    m = sqrt $ x ** 2 + y ** 2
 
 -- | Flatten (unroll) a 'Panel' to the XY plane.
 flattenPanel :: Panel -> Panel
-flattenPanel p0@(v0 : (x1, y1, z1) : _) = undefined p2
+flattenPanel p0@(v0 : (x1, y1, _) : _) = p3
   where
   -- Move first point to the origin.
   p1 = move (neg v0) p0
+  -- Rotate second point to YZ plane.
+  p2@(_ : (_, y2, z2) : _) = rotateZ (pi / 2 - atan2 y1 x1) p1
   -- Rotate second point to Y axis.
-  m1 = sqrt $ x1 ** 2 + y1 ** 2
-  p2 = rotateX (- atan2 z1 m1) $ rotateZ (pi / 2 - atan2 y1 x1) p1
+  p3 = rotateX (- atan2 z2 y2) p2
+
 flattenPanel _ = error "flattenPanel: Not enough points to form a triangle."
 
