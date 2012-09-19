@@ -16,6 +16,7 @@ library
   exposed-modules: Language.DevSurf
                    Language.DevSurf.STL
                    Language.DevSurf.Types
+  extensions:      TypeSynonymInstances, FlexibleInstances
   ghc-options:     -W
 
 source-repository head
