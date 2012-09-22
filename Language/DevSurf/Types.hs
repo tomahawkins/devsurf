@@ -109,14 +109,25 @@ rotateZ angle = transform f
 
 -- | Flatten (unroll) a 'Panel' to the XY plane.
 flattenPanel :: Panel -> Panel
-flattenPanel p0@(v0 : (x1, y1, _) : _) = p3
+flattenPanel (a : rest) = flatten [(0, 0, 0)] $ move (neg a) rest
   where
-  -- Move first point to the origin.
-  p1 = move (neg v0) p0
-  -- Rotate second point to YZ plane.
-  p2@(_ : (_, y2, z2) : _) = rotateZ (pi / 2 - atan2 y1 x1) p1
-  -- Rotate second point to Y axis.
-  p3 = rotateX (- atan2 z2 y2) p2
+  -- On entry: last point at origin, second to last point on Y axis.
+  flatten :: Panel -> Panel -> Panel
+  flatten sofar [] = sofar
+  flatten b0 a0@((x0, _, z0) : _) = flatten (b4 ++ [p4]) a4
+    where
+    -- Rotate point to X-Y plane.
+    a1@((x1, y1, _) : _) = rotateY (atan2 z0 x0) a0
+    -- Rotate point to positive Y axis.
+    a2@(p2 : _) = rotateZ (pi / 2 - atan2 y1 x1) a1
+    b2          = rotateZ (pi / 2 - atan2 y1 x1) b0
+    -- Move point to origin.
+    a3 = move (neg p2) a2
+    b3 = move (neg p2) b2
+    -- Scale to mirror X-Z plane.
+    p4 : a4 = scale (1, -1, 1) a3
+    b4      = scale (1, -1, 1) b3
 
 flattenPanel _ = error "flattenPanel: Not enough points to form a triangle."
+
 
