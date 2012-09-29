@@ -6,6 +6,7 @@ module Language.DevSurf.Types
   , Mesh
   , Panel
   , PanelFace (..)
+  , Curve
   , Transform (..)
   , scale
   , move
@@ -20,6 +21,8 @@ module Language.DevSurf.Types
   , magnitude
   , meshPanel
   , flattenPanel
+  , reverseCurve
+  , loft
   ) where
 
 import Data.List
@@ -32,6 +35,9 @@ type Mesh     = [Triangle]
 
 -- | Analogous to an OpenGL triangle strip.
 type Panel = [Vertex]
+
+-- | A parametric curve, evaluated from 0 to 1.
+type Curve = Double -> Vector
 
 -- | Vector cross product.
 cross :: Vector -> Vector -> Vector
@@ -76,6 +82,7 @@ instance Transform Vector   where transform f a = f a
 instance Transform Panel    where transform f a = map (transform f) a
 instance Transform Triangle where transform f (a, b, c) = (f a, f b, f c)
 instance Transform Mesh     where transform f a = map (transform f) a
+instance Transform Curve    where transform f a = f . a
 
 move :: Transform a => Vector -> a -> a
 move a = transform $ add a
@@ -130,4 +137,10 @@ flattenPanel (a : rest) = flatten [(0, 0, 0)] $ move (neg a) rest
 
 flattenPanel _ = error "flattenPanel: Not enough points to form a triangle."
 
+-- | Reverse the direction of a curve.
+reverseCurve :: Curve -> Curve
+reverseCurve a = a . (1 -)
 
+-- | Loft a 'Panel' between two 'Curve's.
+loft :: Int -> Curve -> Curve -> Panel
+loft = undefined
