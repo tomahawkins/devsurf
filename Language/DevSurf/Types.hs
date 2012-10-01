@@ -20,8 +20,8 @@ module Language.DevSurf.Types
   , normalize
   , magnitude
   , meshPanel
-  , flattenPanel
-  , reverseCurve
+  , flatten
+  , subdivide
   , loft
   ) where
 
@@ -36,8 +36,8 @@ type Mesh     = [Triangle]
 -- | Analogous to an OpenGL triangle strip.
 type Panel = [Vertex]
 
--- | A parametric curve, evaluated from 0 to 1.
-type Curve = Double -> Vector
+-- | A curve is build up of line segments.
+type Curve = [Vertex]
 
 -- | Vector cross product.
 cross :: Vector -> Vector -> Vector
@@ -77,12 +77,10 @@ meshPanel face a = case a of
     RHR -> [False, True]
     LHR -> [True, False]
 
-class    Transform a        where transform :: (Vector -> Vector) -> a -> a
-instance Transform Vector   where transform f a = f a
-instance Transform Panel    where transform f a = map (transform f) a
-instance Transform Triangle where transform f (a, b, c) = (f a, f b, f c)
-instance Transform Mesh     where transform f a = map (transform f) a
-instance Transform Curve    where transform f a = f . a
+class    Transform a                  where transform :: (Vector -> Vector) -> a -> a
+instance Transform Vector             where transform f a = f a
+instance Transform Triangle           where transform f (a, b, c) = (f a, f b, f c)
+instance Transform a => Transform [a] where transform f a = map (transform f) a
 
 move :: Transform a => Vector -> a -> a
 move a = transform $ add a
@@ -115,13 +113,13 @@ rotateZ angle = transform f
     m = sqrt $ x ** 2 + y ** 2
 
 -- | Flatten (unroll) a 'Panel' to the XY plane.
-flattenPanel :: Panel -> Panel
-flattenPanel (a : rest) = flatten [(0, 0, 0)] $ move (neg a) rest
+flatten :: Panel -> Panel
+flatten (a : rest) = f [(0, 0, 0)] $ move (neg a) rest
   where
   -- On entry: last point at origin, second to last point on Y axis.
-  flatten :: Panel -> Panel -> Panel
-  flatten sofar [] = sofar
-  flatten b0 a0@((x0, _, z0) : _) = flatten (b4 ++ [p4]) a4
+  f :: Panel -> Panel -> Panel
+  f sofar [] = sofar
+  f b0 a0@((x0, _, z0) : _) = f (b4 ++ [p4]) a4
     where
     -- Rotate point to X-Y plane.
     a1@((x1, y1, _) : _) = rotateY (atan2 z0 x0) a0
@@ -135,12 +133,29 @@ flattenPanel (a : rest) = flatten [(0, 0, 0)] $ move (neg a) rest
     p4 : a4 = scale (1, -1, 1) a3
     b4      = scale (1, -1, 1) b3
 
-flattenPanel _ = error "flattenPanel: Not enough points to form a triangle."
+flatten _ = error "flatten: Not enough points to form a triangle."
 
--- | Reverse the direction of a curve.
-reverseCurve :: Curve -> Curve
-reverseCurve a = a . (1 -)
+-- | Subdivide a 'Curve'.
+subdivide :: Curve -> Curve
+subdivide = f2 . f1
+  where
+  f1 :: Curve -> Curve
+  f1 a = case a of
+    a : b : c -> a : ave2 a b : f1 (b : c)
+    a -> a
+
+  f2 :: Curve -> Curve
+  f2 a = case a of
+    a : b : c : d : e : f -> a : b : ave3 b c d : d : f2 (c : e : f)
+    a -> a
+
+  ave2 :: Vertex -> Vertex -> Vertex
+  ave2 (x1, y1, z1) (x2, y2, z2) = ((x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2)
+
+  ave3 :: Vertex -> Vertex -> Vertex -> Vertex
+  ave3 (x1, y1, z1) (x2, y2, z2) (x3, y3, z3) = ((x1 + x2 + x3) / 2, (y1 + y2 + y3) / 2, (z1 + z2 + z3) / 2)
 
 -- | Loft a 'Panel' between two 'Curve's.
-loft :: Int -> Curve -> Curve -> Panel
-loft = undefined
+loft :: Curve -> Curve -> Panel
+loft a b = concat [ [a, b] | (a, b) <- zip a b ]
+
