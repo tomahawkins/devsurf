@@ -146,7 +146,12 @@ subdivide = f2 . f1
 
   f2 :: Curve -> Curve
   f2 a = case a of
-    a : b : c : d : e : f -> a : b : ave3 b c d : d : f2 (c : e : f)
+    [] -> []
+    a : b -> a : f3 b
+
+  f3 :: Curve -> Curve
+  f3 a = case a of
+    a : b : c : d -> a : ave3 a b c : f3 (c : d)
     a -> a
 
   ave2 :: Vertex -> Vertex -> Vertex
