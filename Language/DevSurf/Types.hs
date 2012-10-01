@@ -22,10 +22,13 @@ module Language.DevSurf.Types
   , meshPanel
   , flatten
   , subdivide
+  , subdivideN
+  , subdivideToPrecision
   , loft
   ) where
 
 import Data.List
+import Data.Maybe (fromJust)
 
 type Vector   = (Double, Double, Double)
 type Vertex   = Vector
@@ -135,7 +138,7 @@ flatten (a : rest) = f [(0, 0, 0)] $ move (neg a) rest
 
 flatten _ = error "flatten: Not enough points to form a triangle."
 
--- | Subdivide a 'Curve'.
+-- | Subdivide a 'Curve' once.
 subdivide :: Curve -> Curve
 subdivide = f2 . f1
   where
@@ -159,6 +162,21 @@ subdivide = f2 . f1
 
   ave3 :: Vertex -> Vertex -> Vertex -> Vertex
   ave3 (x1, y1, z1) (x2, y2, z2) (x3, y3, z3) = ((x1 + x2 + x3) / 2, (y1 + y2 + y3) / 2, (z1 + z2 + z3) / 2)
+
+-- | Subdivde a 'Curve' N times.
+subdivideN :: Int -> Curve -> Curve
+subdivideN n a = iterate subdivide a !! n
+
+-- | Subdivide a 'Curve' until max distance between points has a given precision.
+subdivideToPrecision :: Double -> Curve -> Curve
+subdivideToPrecision p a = fromJust $ find prec $ iterate subdivide a
+  where
+  prec :: Curve -> Bool
+  prec a = all (<= p) [ magnitude (b `sub` a) | (a, b) <- zip a (tail' a) ]
+
+  tail' a = case a of
+    [] -> []
+    _ : a -> a
 
 -- | Loft a 'Panel' between two 'Curve's.
 loft :: Curve -> Curve -> Panel
