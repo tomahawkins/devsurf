@@ -40,7 +40,7 @@ type Mesh     = [Triangle]
 -- | Analogous to an OpenGL triangle strip.
 type Panel = [Vertex]
 
--- | A curve is build up of line segments.
+-- | A curve is built up of line segments.
 type Curve = [Vertex]
 
 -- | Vector cross product.
@@ -141,7 +141,7 @@ flatten _ = error "flatten: Not enough points to form a triangle."
 
 -- | Build a profile of a 'Panel'
 profile :: Panel -> Curve
-profile curve = head a : undefined
+profile curve = a ++ reverse b ++ [head a]
   where
   (a, b) = split curve
   split :: [Vector] -> ([Vector], [Vector])
