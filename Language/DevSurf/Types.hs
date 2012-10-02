@@ -21,6 +21,7 @@ module Language.DevSurf.Types
   , magnitude
   , meshPanel
   , flatten
+  , profile
   , subdivide
   , subdivideN
   , subdivideToPrecision
@@ -138,6 +139,18 @@ flatten (a : rest) = f [(0, 0, 0)] $ move (neg a) rest
 
 flatten _ = error "flatten: Not enough points to form a triangle."
 
+-- | Build a profile of a 'Panel'
+profile :: Panel -> Curve
+profile curve = head a : undefined
+  where
+  (a, b) = split curve
+  split :: [Vector] -> ([Vector], [Vector])
+  split a = case a of
+    [] -> ([], [])
+    [a] -> ([a], [])
+    a : b : rest -> (a : a', b : b') where (a', b') = split rest
+
+
 -- | Subdivide a 'Curve' once.
 subdivide :: Curve -> Curve
 subdivide = f2 . f1
@@ -161,7 +174,7 @@ subdivide = f2 . f1
   ave2 (x1, y1, z1) (x2, y2, z2) = ((x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2)
 
   ave3 :: Vertex -> Vertex -> Vertex -> Vertex
-  ave3 (x1, y1, z1) (x2, y2, z2) (x3, y3, z3) = ((x1 + x2 + x3) / 2, (y1 + y2 + y3) / 2, (z1 + z2 + z3) / 2)
+  ave3 (x1, y1, z1) (x2, y2, z2) (x3, y3, z3) = ((x1 + x2 + x3) / 3, (y1 + y2 + y3) / 3, (z1 + z2 + z3) / 3)
 
 -- | Subdivde a 'Curve' N times.
 subdivideN :: Int -> Curve -> Curve

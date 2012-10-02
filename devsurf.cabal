@@ -15,6 +15,7 @@ library
   build-depends:   base
   exposed-modules: Language.DevSurf
                    Language.DevSurf.STL
+                   Language.DevSurf.SVG
                    Language.DevSurf.Types
   extensions:      TypeSynonymInstances, FlexibleInstances
   ghc-options:     -W
