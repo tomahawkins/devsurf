@@ -14,18 +14,21 @@ module Language.DevSurf.Types
   , rotateY
   , rotateZ
   , cross
+  , dot
   , add
   , sub
   , neg
   , normalize
   , magnitude
   , meshPanel
+  , canFlatten
   , flatten
   , profile
   , subdivide
   , subdivideN
   , subdivideToPrecision
   , loft
+  , triangleNormal
   ) where
 
 import Data.List
@@ -46,6 +49,10 @@ type Curve = [Vertex]
 -- | Vector cross product.
 cross :: Vector -> Vector -> Vector
 cross (a1, a2, a3) (b1, b2, b3) = (a2 * b3 - a3 * b2, a3 * b1 - a1 * b3, a1 * b2 - a2 * b1)
+
+-- | Vector dot product.
+dot :: Vector -> Vector -> Double
+dot (a1, a2, a3) (b1, b2, b3) = a1 * b1 + a2 * b2 + a3 * b3
 
 -- | Vector normalization.
 normalize :: Vector -> Vector
@@ -115,6 +122,12 @@ rotateZ angle = transform f
     where
     angle' = angle + atan2 y x
     m = sqrt $ x ** 2 + y ** 2
+
+-- | Given a surface normal dot product threshold, checks if a panel can be flattened (unrolled).
+canFlatten :: Double -> Panel -> Bool
+canFlatten threshold panel = all (>= threshold) [ a `dot` b | (a, b) <- zip normals $ tail normals ]
+  where
+  normals = map triangleNormal $ meshPanel RHR panel
 
 -- | Flatten (unroll) a 'Panel' to the XY plane.
 flatten :: Panel -> Panel
@@ -194,4 +207,11 @@ subdivideToPrecision p a = fromJust $ find prec $ iterate subdivide a
 -- | Loft a 'Panel' between two 'Curve's.
 loft :: Curve -> Curve -> Panel
 loft a b = concat [ [a, b] | (a, b) <- zip a b ]
+
+-- | Computes a surface normal for a 'Triangle'.
+triangleNormal :: Triangle -> Vector
+triangleNormal (v1, v2, v3) = normalize $ a `cross` b
+  where
+  a = v2 `sub` v1
+  b = v3 `sub` v2
 

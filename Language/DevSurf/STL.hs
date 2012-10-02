@@ -26,10 +26,3 @@ exportSTL mesh = unlines
   showVector :: Vector -> String
   showVector (x, y, z) = show x ++ " " ++ show y ++ "  " ++ show z
 
-triangleNormal :: Triangle -> Vector
-triangleNormal (v1, v2, v3) = normalize $ a `cross` b
-  where
-  a = v2 `sub` v1
-  b = v3 `sub` v2
-
-
